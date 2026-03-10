@@ -124,6 +124,36 @@ class Streak{
     // Any private helper functions must be delared here!
     // ***************************************************
 
+    // helper for destructor
+    void clearHelper(Tiger* node);
+
+    // help for deletion
+    Tiger* remove(Tiger* tiger, int id);
+
+    // helper for insert function
+    Tiger* insert(Tiger* node, const Tiger& tiger);
+    void updateHeight(Tiger* node);
+
+    // helper for findTiger function
+    bool search(Tiger* tiger, int id);
+
+    // different AVL functions
+    Tiger* leftRotate(Tiger* x);
+    Tiger* rightRotate(Tiger* y);
+    Tiger* rebalance(Tiger* node);
+
+    int checkBalance(Tiger* node);
+
+    // helper to find dead before deleting them
+    Tiger* findDead(Tiger* node);
+
+    // helper for listing current tigers
+    void listTigers(Tiger* node) const;
+
+    // helper functions for count functions
+    int countHelper(Tiger* node, STATE state) const;
+    int countHelper(Tiger* node, AGE age) const;
+
 };
 
 class Grid{
@@ -148,6 +178,8 @@ class Grid{
     // ***************************************************
     // Any private helper functions must be delared here!
     // ***************************************************
+
+    Streak* Grid::splay(Streak* root, int gridID);
 
 };
 #endif
