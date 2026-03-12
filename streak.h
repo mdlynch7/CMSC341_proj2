@@ -179,7 +179,11 @@ class Grid{
     // Any private helper functions must be delared here!
     // ***************************************************
 
-    Streak* Grid::splay(Streak* root, int gridID);
+    Streak* splay(Streak* root, int gridID);
+    Streak* rightRotate(Streak* x);
+    Streak* leftRotate(Streak* x);
+    int heightHelper(Streak* node);
+    void clear(Streak* node);
 
 };
 #endif

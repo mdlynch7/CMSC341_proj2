@@ -125,10 +125,13 @@ void Streak::dump(Tiger* aTiger) const{
  */
 Grid::Grid(){
     // constructor creates an empty object
+    m_root = nullptr;
 }
 
 Grid::~Grid(){
     // destructor, deallocates all dynamically created memory
+    clear(m_root);
+    m_root = nullptr;
 }
 
 bool Grid::insert(int grid, Tiger tigers[], int population){
@@ -144,28 +147,73 @@ bool Grid::insert(int grid, Tiger tigers[], int population){
         return true;
     }
 
-    // splay tree for gridID
+    // splay tree for gridID, most recent one becomes the root
     m_root = splay(m_root, grid);
 
     // check if duplicate
     if (m_root->m_gridID == grid) return false;
+
+    Streak* newStreak = new Streak(grid, tigers, population);
+    if (grid < m_root->m_gridID) {
+        newStreak->m_right = m_root;
+        newStreak->m_left = m_root->m_left;
+        m_root->m_left = nullptr;
+    } else {
+        newStreak->m_left = m_root;
+        newStreak->m_right = m_root->m_right;
+        m_root->m_right = nullptr;
+    }
+
+    m_root = newStreak;
+    return true;
 }
 
 int Grid::count(int grid, STATE state){
     // finds all tigers with specific state and returns total number of them
+    // splays node being accessed
+    m_root = splay(m_root, grid);
+    if (m_root != nullptr && m_root->m_gridID == grid) {
+        // calls streak count
+        return m_root->count(state);
+    }
+    return 0;
 }
 int Grid::count(int grid, AGE age){
     // finds all tigers with specific age and returns total number of them
+    m_root = splay(m_root, grid);
+    if (m_root != nullptr && m_root->m_gridID == grid) {
+        return m_root->count(age);
+    }
+    return 0;
 }
 bool Grid::removeTiger(int grid, int tiger, bool all){
     // removes tiger if all flag is false, if true it removes all dead tigers
+    m_root = splay(m_root, grid);
+    if (m_root != nullptr && m_root->m_gridID == grid) {
+        if (all) {
+            m_root->removeDead();
+        } else {
+            m_root->remove(tiger);
+        }
+        return true;
+    }
+    return false;
 }
 int Grid::getGridHeight(int grid){
     // returns the height of the tree
     // if error case, returns -1
+    m_root = splay(m_root, grid);
+    if (m_root == nullptr || m_root->m_gridID != grid) return -1;
+
+    return heightHelper(m_root);
 }
 bool Grid::setState(int grid, int tiger, STATE state){
     // tries to change the current state of the tiger
+    m_root = splay(m_root, grid);
+    if (m_root != nullptr && m_root->m_gridID == grid) {
+        return m_root->setState(tiger, state);
+    }
+    return false;
 }
 void Grid::dump(bool verbose) const{
 	dumpHelper(m_root, verbose);
@@ -286,10 +334,6 @@ Tiger* Streak::leftRotate(Tiger* x) {
     return y;
 }
 
-bool Streak::search(Tiger* tiger, int id) {
-
-}
-
 void Streak::clearHelper(Tiger* node) {
     // Base case, returns if node is nullptr
     if (node == nullptr) return;
@@ -383,10 +427,11 @@ int Streak::countHelper(Tiger* node, STATE state) const{
     return match + countHelper(node->m_left, state) + countHelper(node->m_right, state);
 }
 
-
+//////////////////////////////////////////////////////////////////////
 /**
  *          GRID HELPER FUNCTIONS (YIPPEEEEEEE)
  */
+//////////////////////////////////////////////////////////////////////
 
 Streak* Grid::splay(Streak* root, int gridID) {
     // if root is nullptr (traversed through tree) or target found, return root
@@ -394,5 +439,56 @@ Streak* Grid::splay(Streak* root, int gridID) {
 
     if (gridID < root->m_gridID) {
         if (root->m_left == nullptr) return root;
+
+        if (gridID < root->m_left->m_gridID) {
+            root->m_left->m_left = splay(root->m_left->m_left, gridID);
+            root = rightRotate(root);
+        } else if (root->m_left->m_gridID < gridID) {
+            root->m_left->m_right = splay(root->m_left->m_right, gridID);
+            if (root->m_left->m_right != nullptr) {
+                root->m_left = leftRotate(root->m_left);
+            }
+        }
+        return (root->m_left == nullptr) ? root : rightRotate(root);
     }
+    else {
+        if (root->m_right == nullptr) return root;
+        if (root->m_right->m_gridID > gridID) {
+            root->m_right->m_left = splay(root->m_right->m_left, gridID);
+            if (root->m_right->m_left != nullptr)
+                root->m_right = rightRotate(root->m_right);
+        } else if (root->m_right->m_gridID < gridID) {
+            root->m_right->m_right = splay(root->m_right->m_right, gridID);
+            root = leftRotate(root);
+        }
+        return (root->m_right == nullptr) ? root : leftRotate(root);
+    }
+}
+
+Streak* Grid::rightRotate(Streak* x) {
+    Streak* y = x->m_left;
+    x->m_left = y->m_right;
+    y->m_right = x;
+    return y;
+}
+
+Streak* Grid::leftRotate(Streak* x) {
+    Streak* y = x->m_right;
+    x->m_right = y->m_left;
+    y->m_left = x;
+    return y;
+}
+
+int Grid::heightHelper(Streak* node) {
+    if (node == nullptr) return -1;
+    int leftHeight = heightHelper(node->m_left);
+    int rightHeight = heightHelper(node->m_right);
+    return 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
+}
+
+void Grid::clear(Streak* node) {
+    if (node == nullptr) return;
+    clear(node->m_left);
+    clear(node->m_right);
+    delete node;
 }
