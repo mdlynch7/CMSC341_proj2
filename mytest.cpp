@@ -119,6 +119,11 @@ class Tester{ // Tester class to implement test functions
     bool testGridCount(); // tests count function for a specific state
     bool testGridCountAge();
     bool testGridSetState();
+
+    // Additional Testing Functions
+    bool testRemoveDeadBalance();
+    bool testGetGridHeightSplay();
+    bool testEmptyGrid();
 };
 int main(){
     Tester tester;
@@ -177,6 +182,20 @@ int main(){
     if (tester.testGridSetState()) cout << "Set State Test Successful!" << endl;
     else cout << "Set State Test failed..." << endl;
 
+    cout << endl << "************* Additional Testing *************" << endl;
+    cout << endl << "Testing Get Grid Height Splay" << endl;
+    if (tester.testGetGridHeightSplay()) cout << "Get Grid Height Splay Test Successful!" << endl;
+    else cout << "Get Grid Height Splay Test failed..." << endl;
+
+    cout << endl << "Testing Empty Grid Splay" << endl;
+    if (tester.testEmptyGrid()) cout << "Empty Grid Test Successful!" << endl;
+    else cout << "Empty Grid Test failed..." << endl;
+
+    cout << endl << "Testing Remove Dead Balance" << endl;
+    if (tester.testRemoveDeadBalance()) cout << "Remove Dead Balance Test Successful!" << endl;
+    else cout << "Remove Dead Balance Test failed..." << endl;
+
+
     return 0;
 }
 
@@ -213,7 +232,7 @@ bool Tester::testAVLRemoveBalance() {
     }
 
     // ensures tree is still balanced and is a BST using helper functions
-    return isBalanced(streak.m_root) && isBST(streak.m_root, MINID, MAXID);
+    return isBalanced(streak.m_root) && isBST(streak.m_root, MINID - 1, MAXID + 1);
 }
 
 bool Tester::testDuplicateID() {
@@ -247,7 +266,7 @@ bool Tester::testAVLRemoveError() {
     streak.insert(t2);
     // tries to remove an invalid id (not in AVL tree)
     streak.remove(10001);
-    return isBalanced(streak.m_root) && isBST(streak.m_root, MINID - 1, MAXID - 1);
+    return isBalanced(streak.m_root) && isBST(streak.m_root, MINID - 1, MAXID + 1);
 
 }
 
@@ -264,8 +283,10 @@ bool Tester::testSearchLarge() {
     for (int i = 0; i < maxTigers; i++) {
         int id = idGen.getRandNum();
         Tiger tiger(id);
-        streak.insert(tiger);
-        ids.push_back(id);
+        if (!streak.findTiger(id)) {
+            streak.insert(tiger);
+            ids.push_back(id);
+        }
     }
 
     for (int i = 0; i < searches; i++) {
@@ -278,8 +299,7 @@ bool Tester::testSearchLarge() {
 
 bool Tester::testSearchEmpty() {
     Streak streak;
-    streak.findTiger(12345);
-    return streak.m_root == nullptr;
+    return streak.findTiger(12345) == false;
 }
 
 bool Tester::testSearchError() {
@@ -312,6 +332,9 @@ bool Tester::testGridSplayLarge() {
         }
 
     }
+
+    // ensures it's still a BST after large number of splays
+    if (!isGridBST(grid.m_root, MINID - 1, MAXID + 1)) return false;
 
     return true;
 }
@@ -436,6 +459,93 @@ bool Tester::testGridSetState() {
 
     // ensures splay worked as intended
     if (grid.m_root == nullptr || grid.m_root->m_gridID != targetID) return false;
+
+    return true;
+}
+
+
+bool Tester::testGetGridHeightSplay() {
+    Grid grid;
+    Random idGen(MINID, MAXID);
+    Random ranNum(0, 19);
+
+    Tiger tigers[20];
+
+    int numGrids = 20;
+    int randomNumber = ranNum.getRandNum();
+    int id = idGen.getRandNum();
+
+
+    for (int i = 0; i < numGrids; i++) {
+        if (i == randomNumber) {
+            grid.insert(id, tigers, 0);
+        } else {
+            grid.insert(idGen.getRandNum(), tigers, 0);
+        }
+    }
+
+    int currentID = grid.m_root->m_gridID;
+
+    if (id != grid.m_root->m_gridID) {
+        grid.getGridHeight(id);
+    }
+
+    if (grid.m_root->m_gridID == currentID) return false;
+
+    if (grid.m_root->m_gridID != id) return false;
+
+    if (!isGridBST(grid.m_root, MINID - 1, MAXID + 1)) return false;
+
+    return true;
+}
+
+bool Tester::testEmptyGrid() {
+    Grid grid;
+    Random idGen(MINID, MAXID);
+
+    if (grid.count(idGen.getRandNum(), ALIVE)) return false;
+
+    if (grid.count(idGen.getRandNum(), OLD)) return false;
+
+    if (grid.setState(idGen.getRandNum(), idGen.getRandNum(), DEAD)) return false;
+
+    return true;
+}
+
+bool Tester::testRemoveDeadBalance() {
+    Streak streak;
+    // ensures it can properly balance a right heavy tree (like a linked list)
+    int start = 20000;
+    int increment = 100;
+
+    int numTigers = 50;
+    int numDead = 25;
+
+    vector<int> ids;
+
+    // inserts all of the tigers into the AVL tree, which are properly balanced as created
+    for (int i = 0; i < numTigers; i++) {
+        int id = start + (i * increment);
+        ids.push_back(id);
+        Tiger tiger(id, YOUNG, UNKNOWN, ALIVE);
+        streak.insert(tiger);
+    }
+
+    // makes the first half dead (left side)
+    for (int i = 0; i < numDead; i++) {
+        streak.setState(ids[i], DEAD);
+    }
+
+    // calls remove dead function
+    streak.removeDead();
+
+    if (streak.count(DEAD) != 0) return false;
+
+    if (streak.count(ALIVE) != (numTigers - numDead)) return false;
+
+    if (!isBalanced(streak.m_root)) return false;
+
+    if (!isBST(streak.m_root, MINID - 1, MAXID + 1)) return false;
 
     return true;
 }

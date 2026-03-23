@@ -90,10 +90,13 @@ bool Streak::findTiger(int id) const {
     // returns true if it finds the node with id in tree
     Tiger* tiger = m_root;
     while (tiger != nullptr) {
+        // if target is target->m_id returns true (found tiger)
         if (id == tiger->m_id) {
             return true;
+        // if less than, goes to left child
         } else if (id < tiger->m_id) {
             tiger = tiger->m_left;
+        // if greater than, goes to right child
         } else if (id > tiger->m_id) {
             tiger = tiger->m_right;
         } 
@@ -112,6 +115,7 @@ int Streak::count(STATE state) const{
 }
 
 void Streak::dumpTree() const {dump(m_root);}
+
 void Streak::dump(Tiger* aTiger) const{
     if (aTiger != nullptr){
         cout << "(";
@@ -352,17 +356,21 @@ Tiger* Streak::remove(Tiger* root, int id) {
     if (root == nullptr) return root;
     
     // performs standard BST delete
-    if (id < root->m_id) {
+    if (id < root->m_id) { // if id less than current id, goes to left child
         root->m_left = remove(root->m_left, id);
-    } else if (id > root->m_id) {
+    } else if (id > root->m_id) { // if id greater than current id, goes to right child
         root->m_right = remove(root->m_right, id);
     } else {
+        // if equal or there are no children
         if ((root->m_left == nullptr) || (root->m_right == nullptr)) {
+            // if one is nullptr and not hte other, assigns temp to not nullptr
             Tiger* temp = root->m_left ? root->m_left : root->m_right;
 
+            // if there are no children
         if (temp == nullptr) {
             delete root;
             return nullptr;
+            // if there is one child
         } else {
             Tiger* old = root;
             root = temp;
