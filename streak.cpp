@@ -5,6 +5,8 @@ Streak::Streak(){
     // default constructor, performs required initializations
     m_root = nullptr;
     m_gridID = DEFAULT_ID;
+    m_left = nullptr;
+    m_right = nullptr;
 }
 
 Streak::Streak(int grid, Tiger tigers[], int population){
@@ -12,6 +14,8 @@ Streak::Streak(int grid, Tiger tigers[], int population){
     // population is the size of the array, function assumes the population is of correct size
     m_root = nullptr;
     m_gridID = grid;
+    m_left = nullptr;
+    m_right = nullptr;
 
     for (int i = 0; i < population; i++) {
         // calls insert to handle new memory and AVL balancing
