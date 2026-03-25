@@ -98,6 +98,20 @@ class Tester{ // Tester class to implement test functions
         return isGridBST(node->m_left, min, node->m_gridID) && isGridBST(node->m_right, node->m_gridID, max);
     }
 
+    int verifyHeight(Tiger* node, bool& match) {
+        if (node == nullptr) return -1; // invalid height, indicates failure
+        int leftHeight = verifyHeight(node->m_left, match);
+        int rightHeight = verifyHeight(node->m_right, match);
+
+        int actualHeight = 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
+
+        if (node->m_height != actualHeight) {
+            match = false;
+        }
+
+        return actualHeight;
+    }
+
     // testing functions
     // AVL testing functions
     bool testAVLInsertBalance();
@@ -107,6 +121,8 @@ class Tester{ // Tester class to implement test functions
     bool testAVLRemoveBalance(); // normal multiple removal, ensures balance is good
     bool testAVLRemoveEmpty(); // tests removing from empty tree
     bool testAVLRemoveError(); // tests removing when id DNE
+
+    bool testAVLHeight();
 
 
     // searching test functions
@@ -149,6 +165,10 @@ int main(){
     cout << endl << "Testing AVL Remove Error" << endl;
     if (tester.testAVLRemoveError()) cout << "AVL Remove Error Test Successful!" << endl;
     else cout << "AVL Remove Error Test failed..." << endl;
+    
+    cout << endl << "Testing AVL Stored Height Correctness" << endl;
+    if (tester.testAVLHeight()) cout << "Height Value Test Successful!" << endl;
+    else cout << "Height Value Test failed..." << endl;
 
 
     cout << endl << "************* Search Functions Tests *************" << endl;
@@ -207,6 +227,7 @@ bool Tester::testAVLInsertBalance() {
     for (int i = 0; i < 300; i++) {
         Tiger tiger(idGen.getRandNum());
         streak.insert(tiger);
+        if(!streak.findTiger(tiger.m_id)) return false;
     }
 
     // calls helper function that ensures AVL tree is still balanced
@@ -224,11 +245,13 @@ bool Tester::testAVLRemoveBalance() {
         ids[i] = idGen.getRandNum();
         Tiger tiger(ids[i]);
         streak.insert(tiger);
+        if(!streak.findTiger(tiger.m_id)) return false;
     }
 
     // removes half of them
     for (int i = 0; i < 25; i++) {
         streak.remove(ids[i]);
+        if (streak.findTiger(ids[i])) return false;
     }
 
     // ensures tree is still balanced and is a BST using helper functions
@@ -270,6 +293,21 @@ bool Tester::testAVLRemoveError() {
 
 }
 
+bool Tester::testAVLHeight() {
+    Streak streak;
+    Random idGen(MINID, MAXID);
+
+    // forces multiple rotations
+    for (int i = 0; i < 150; i++) {
+        Tiger tiger(idGen.getRandNum());
+        streak.insert(tiger);
+    }
+
+    bool correctHeight = true;
+    verifyHeight(streak.m_root, correctHeight);
+
+    return correctHeight;
+}
 
 bool Tester::testSearchLarge() {
     Streak streak;

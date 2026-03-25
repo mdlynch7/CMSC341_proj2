@@ -147,7 +147,8 @@ bool Grid::insert(int grid, Tiger tigers[], int population){
     // Splay tree: required reorganization after insertion
     // duplicate key is not allowed
     // invalid ID returns false
-    if (grid < MINID || grid > MAXID) return false;
+    //if (grid < MINID || grid > MAXID) return false;
+    if (grid < 0) return false;
 
     // if tree empty, adds new Streak (AVL)
     if (m_root == nullptr) {
@@ -199,11 +200,15 @@ bool Grid::removeTiger(int grid, int tiger, bool all){
     m_root = splay(m_root, grid);
     if (m_root != nullptr && m_root->m_gridID == grid) {
         if (all) {
+            if (m_root->count(DEAD) == 0) return false;
             m_root->removeDead();
+            return true;
         } else {
-            m_root->remove(tiger);
+            if (m_root->findTiger(tiger)) {
+                m_root->remove(tiger);
+                return true;
+            }
         }
-        return true;
     }
     return false;
 }
